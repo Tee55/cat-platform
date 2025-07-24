@@ -14,6 +14,7 @@ import { api } from "@/trpc/react";
 import type { NewsSchemaType } from "@/shared/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import DOMPurify from 'dompurify';
 import {
   Card,
   CardContent,
@@ -27,7 +28,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import Image from "next/image";
 
 // Extended type for news with source type
 type NewsWithSource = NewsSchemaType & {
@@ -41,35 +41,30 @@ const NewsPage = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [limit] = useState(12);
 
-  // Query parameters
   const queryParams = {
     page: currentPage,
     limit,
     search: searchQuery || undefined,
     sort: sortField,
-    order: sortOrder as "asc" | "desc",
+    order: sortOrder,
   };
 
-  // Fetch regular news
   const {
     data: regularNews,
     isLoading: regularLoading,
     error: regularError,
   } = api.news.fetchNews.useQuery(queryParams);
 
-  // Fetch Cyfirma news
   const {
     data: cyfirmaNews,
     isLoading: cyfirmaLoading,
     error: cyfirmaError,
   } = api.news.fetchCyfirmaNews.useQuery(queryParams);
 
-  // Combine and sort news from both sources
   const combinedNews = useMemo(() => {
     const regular = regularNews?.data || [];
     const cyfirma = cyfirmaNews?.data || [];
 
-    // Add source type to distinguish between sources
     const regularWithSource: NewsWithSource[] = regular.map((item: any) => ({
       ...item,
       sourceType: "Regular News",
@@ -81,49 +76,10 @@ const NewsPage = () => {
 
     const combined = [...regularWithSource, ...cyfirmaWithSource];
 
-    // Check for duplicate IDs and log them
-    const idMap = new Map<string, NewsWithSource[]>();
-    const duplicateIds: string[] = [];
-
-    combined.forEach((article) => {
-      const id = String(article.id);
-      if (!idMap.has(id)) {
-        idMap.set(id, []);
-      }
-      idMap.get(id)!.push(article);
-    });
-
-    // Find and log duplicates
-    idMap.forEach((articles, id) => {
-      if (articles.length > 1) {
-        duplicateIds.push(id);
-        console.log(`🔍 Duplicate ID found: ${id}`);
-        console.log(`📊 Number of duplicates: ${articles.length}`);
-        console.log("📝 Articles with this ID:");
-        articles.forEach((article, index) => {
-          console.log(`  ${index + 1}. Source: ${article.sourceType}`);
-          console.log(`     Title: ${article.title}`);
-          console.log(`     Author: ${article.author}`);
-          console.log(`     Date: ${article.newsDate}`);
-          console.log("     ---");
-        });
-        console.log("=".repeat(50));
-      }
-    });
-
-    if (duplicateIds.length > 0) {
-      console.warn(`⚠️  Total duplicate IDs found: ${duplicateIds.length}`);
-      console.warn(`🔢 Duplicate IDs: [${duplicateIds.join(", ")}]`);
-    } else {
-      console.log("✅ No duplicate IDs found in news data");
-    }
-
-    // Sort combined results with proper type handling
     return combined.sort((a: NewsWithSource, b: NewsWithSource) => {
       let aValue: string | number;
       let bValue: string | number;
 
-      // Handle different sort fields with proper typing
       switch (sortField) {
         case "newsDate":
         case "createAt":
@@ -144,11 +100,13 @@ const NewsPage = () => {
           bValue = new Date(b.newsDate).getTime();
       }
 
-      if (sortOrder === "asc") {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
+      return sortOrder === "asc"
+        ? aValue > bValue
+          ? 1
+          : -1
+        : aValue < bValue
+          ? 1
+          : -1;
     });
   }, [regularNews, cyfirmaNews, sortField, sortOrder]);
 
@@ -308,8 +266,7 @@ const NewsPage = () => {
                 <div className="bg-muted relative aspect-video overflow-hidden">
                   <img
                     src={
-                      article.img ||
-                      "https://source.unsplash.com/_Zua2hyvTBk"
+                      article.img || "https://picsum.photos/seed/picsum/200/300"
                     }
                     alt={article.title}
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
@@ -317,8 +274,7 @@ const NewsPage = () => {
                     height={225}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src =
-                        "https://source.unsplash.com/_Zua2hyvTBk";
+                      target.src = "https://picsum.photos/seed/picsum/200/300";
                     }}
                   />
                   <div className="absolute top-3 left-3">
@@ -335,9 +291,12 @@ const NewsPage = () => {
                   <CardTitle className="group-hover:text-primary line-clamp-2 text-base leading-tight transition-colors">
                     {article.title}
                   </CardTitle>
-                  <CardDescription className="line-clamp-2 text-sm">
-                    {truncateText(article.detail)}
-                  </CardDescription>
+                  <CardDescription
+                    className="line-clamp-2 text-sm"
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(article.detail),
+                    }}
+                  ></CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-4">
@@ -387,14 +346,16 @@ const NewsPage = () => {
                       )}
                       {article.products && article.products.length > 0 && (
                         <div className="flex flex-wrap gap-1">
-                          {article.products.slice(0, 2).map((index, product) => (
-                            <Badge
-                              key={index}
-                              className="bg-green-100 px-1.5 py-0.5 text-xs text-green-800 hover:bg-green-200"
-                            >
-                              {product}
-                            </Badge>
-                          ))}
+                          {article.products
+                            .slice(0, 2)
+                            .map((index, product) => (
+                              <Badge
+                                key={index}
+                                className="bg-green-100 px-1.5 py-0.5 text-xs text-green-800 hover:bg-green-200"
+                              >
+                                {product}
+                              </Badge>
+                            ))}
                           {article.products.length > 2 && (
                             <Badge
                               variant="outline"

@@ -76,7 +76,7 @@ export const newsService = {
       if (params.search) searchParams.set('searchQuery', params.search);
       
       const queryString = searchParams.toString();
-      const url = `${apiUrl}/campaign/pagination${queryString ? `?${queryString}` : ''}`;
+      const url = `${apiUrl}/news-cyfirma/pagination${queryString ? `?${queryString}` : ''}`;
 
       const session = await auth();
       const response = await fetch(url, {
