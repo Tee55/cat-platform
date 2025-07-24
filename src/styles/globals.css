@@ -123,3 +123,31 @@
     @apply bg-background text-foreground;
   }
 }
+
+h1 {
+  @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl text-foreground;
+}
+
+h2 {
+  @apply scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0 text-foreground;
+}
+
+h3 {
+  @apply scroll-m-20 text-2xl font-semibold tracking-tight text-foreground;
+}
+
+h4 {
+  @apply scroll-m-20 text-xl font-semibold tracking-tight text-foreground;
+}
+
+p {
+  @apply leading-7 text-muted-foreground;
+}
+
+blockquote {
+  @apply mt-6 border-l-2 pl-6 italic text-muted-foreground;
+}
+
+code {
+  @apply relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold text-foreground;
+}

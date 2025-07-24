@@ -2,4 +2,7 @@
     "eslint.useFlatConfig": true,
     "editor.colorDecorators": true,
     "tailwindCSS.colorDecorators": true,
+    "files.associations": {
+        "*.css": "tailwindcss"
+    },
 }

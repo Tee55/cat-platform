@@ -131,19 +131,19 @@ const LoginPage = () => {
         {/* Left Panel */}
         <div className="flex flex-1 flex-col justify-between p-12 text-white">
           <div>
-            <h1 className="mb-4 text-5xl leading-tight font-bold">
+            <div className="mb-4 text-5xl leading-tight font-bold">
               Critical Assets
               <br />
               Threat Platform
-            </h1>
-            <p className="max-w-md text-xl opacity-90">
+            </div>
+            <div className="max-w-md text-xl opacity-90">
               Secure access to your security dashboard and monitoring tools
-            </p>
+            </div>
           </div>
 
           <div>
-            <h2 className="mb-2 text-4xl font-semibold">WELCOME BACK!</h2>
-            <p className="text-lg opacity-75">Please sign in to continue</p>
+            <div className="mb-2 text-4xl font-semibold">WELCOME BACK!</div>
+            <div className="text-lg opacity-75">Please sign in to continue</div>
           </div>
         </div>
 
@@ -151,8 +151,8 @@ const LoginPage = () => {
         <Card className="m-4 h-full w-96 rounded-l-3xl rounded-r-3xl border-0 bg-white">
           <CardContent className="flex h-full flex-col justify-center p-8">
             <div className="mb-8 text-center">
-              <h2 className="mb-2 text-3xl font-bold text-gray-800">Sign In</h2>
-              <p className="text-gray-600">Access your dashboard</p>
+              <div className="mb-2 text-3xl font-bold text-gray-800">Sign In</div>
+              <div className="text-gray-600">Access your dashboard</div>
             </div>
 
             <div className="space-y-5">
@@ -182,9 +182,9 @@ const LoginPage = () => {
                   />
                 </div>
                 {fieldErrors.email && (
-                  <p className="mt-1 text-sm text-red-600">
+                  <div className="mt-1 text-sm text-red-600">
                     {fieldErrors.email}
-                  </p>
+                  </div>
                 )}
               </div>
 
@@ -222,9 +222,9 @@ const LoginPage = () => {
                   </Button>
                 </div>
                 {fieldErrors.password && (
-                  <p className="mt-1 text-sm text-red-600">
+                  <div className="mt-1 text-sm text-red-600">
                     {fieldErrors.password}
-                  </p>
+                  </div>
                 )}
               </div>
 

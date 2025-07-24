@@ -24,12 +24,29 @@ export const scanResultRouter = createTRPCRouter({
     }),
 
   /**
+   * Get scan batches information
+   */
+  getScanBatchesInfo: protectedProcedure
+    .query(async ({ input, ctx }) => {
+      return scanResultService.getScanBatchesInfo();
+    }),
+
+  /**
    * Get scan batch by ID
    */
   getScanResultById: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input, ctx }) => {
       return scanResultService.getScanResultById(input.id);
+    }),
+
+  /**
+   * Get scan match results by scan batch ID
+   */
+  getScanMatchResultByScanBatchId: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input, ctx }) => {
+      return scanResultService.getScanMatchResultByScanBatchId(input.id);
     }),
 
   /**
@@ -45,11 +62,13 @@ export const scanResultRouter = createTRPCRouter({
    * Get vulnerabilities by severity
    */
   getVulnerabilities: protectedProcedure
-    .input(z.object({
-      severity: z.enum(['Critical', 'High', 'Medium', 'Low', 'Info']),
-      scanBatchId: z.string().optional(),
-      limit: z.number().optional(),
-    }))
+    .input(
+      z.object({
+        severity: z.enum(["Critical", "High", "Medium", "Low", "Info"]),
+        scanBatchId: z.string().optional(),
+        limit: z.number().optional(),
+      }),
+    )
     .query(async ({ input, ctx }) => {
       return scanResultService.getVulnerabilitiesBySeverity(
         input.severity,
@@ -62,15 +81,19 @@ export const scanResultRouter = createTRPCRouter({
    * Fetch vulnerabilities with pagination (legacy)
    */
   fetchVulnerabilities: protectedProcedure
-    .input(z.object({
-      severity: z.enum(['Critical', 'High', 'Medium', 'Low', 'Info']).optional(),
-      scanBatchId: z.string().optional(),
-      page: z.number().optional(),
-      limit: z.number().optional(),
-      sort: z.string().optional(),
-      order: z.enum(['asc', 'desc']).optional(),
-      search: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        severity: z
+          .enum(["Critical", "High", "Medium", "Low", "Info"])
+          .optional(),
+        scanBatchId: z.string().optional(),
+        page: z.number().optional(),
+        limit: z.number().optional(),
+        sort: z.string().optional(),
+        order: z.enum(["asc", "desc"]).optional(),
+        search: z.string().optional(),
+      }),
+    )
     .query(async ({ input, ctx }) => {
       if (!input.severity) {
         throw new Error("Severity parameter is required");

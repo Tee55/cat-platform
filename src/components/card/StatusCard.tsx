@@ -1,32 +1,25 @@
-import { Box } from "@radix-ui/themes";
 import type { ReactNode } from "react";
 
 type StatusCardProps = {
   icon?: ReactNode;
   data: number;
-  color: string;
+  color: string; // e.g. "bg-red-500", "bg-teal-600"
   label?: string;
-}
+};
 
-const StatusCard = (props: StatusCardProps) => {
-  const { icon, data, color, label } = props;
+const StatusCard = ({ icon, data, color, label }: StatusCardProps) => {
   return (
-    <Box 
-      className={`bg-gradient-to-br ${color} text-white flex-1 min-w-0 rounded-lg shadow-sm`}
-      p="2"
-      style={{ minWidth: 0 }}
+    <div
+      className={`flex items-center gap-4 rounded p-4 text-white ${color}`}
+      role="region"
+      aria-label={label}
     >
-      <div className="sm:p-4 p-2 flex items-center">
-        {icon ?? null}
-        <div>
-          <p className="text-xs sm:text-sm">
-            {label}
-            <br />
-            <strong className="text-xl sm:text-2xl">{data}</strong>
-          </p>
-        </div>
+      {icon && <div className="text-2xl">{icon}</div>}
+      <div>
+        <div className="text-3xl font-bold">{data}</div>
+        {label && <div className="text-sm">{label}</div>}
       </div>
-    </Box>
+    </div>
   );
 };
 

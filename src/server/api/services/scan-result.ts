@@ -1,8 +1,8 @@
 import { TRPCError } from "@trpc/server";
-import type { PaginationParams, ScanBatchResponseType, ScanResultResponseType, ScanStatisticsResponseType, ScanVulnerabilityResponseType } from "@/shared/types";
+import type { PaginationParams, ScanBatchInfoResponseType, ScanBatchResponseType, ScanMatchResultResponseType, ScanResultResponseType, ScanStatisticsResponseType, ScanVulnerabilityResponseType } from "@/shared/types";
 import { apiUrl } from "./api";
 import { z } from "zod";
-import { ScanBatchResponseSchema, ScanResultResponseSchema, ScanStatisticsResponseSchema, ScanVulnerabilityResponseSchema } from "@/shared/schema";
+import { ScanBatchInfoResponseSchema, ScanBatchResponseSchema, ScanMatchResultResponseSchema, ScanResultResponseSchema, ScanStatisticsResponseSchema, ScanVulnerabilityResponseSchema } from "@/shared/schema";
 import { auth } from "@/server/auth";
 
 export const scanResultService = {
@@ -72,6 +72,38 @@ export const scanResultService = {
       return ScanResultResponseSchema.parse(await response.json());
     } catch (error) {
       console.error("Error uploading multiple files:", error);
+      throw error;
+    }
+  },
+
+
+  /**
+   * Get scan batches
+   */
+  async getScanBatchesInfo(
+  ): Promise<ScanBatchInfoResponseType[]> {
+    try {
+      const session = await auth();
+      const response = await fetch(`${apiUrl}/scan-results/info`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.accessToken && { Authorization: `Bearer ${session.accessToken}` }),
+        },
+      });
+
+      if (!response.ok) {
+        const error = (await response.json()) as { message?: string };
+        throw new TRPCError({
+          code: response.status === 404 ? "NOT_FOUND" : "INTERNAL_SERVER_ERROR",
+          message: error.message ?? "Failed to fetch scan batch",
+        });
+      }
+      const rawData = await response.json() as { data: ScanBatchInfoResponseType[] };
+      console.log("Fetched scan batch data:", rawData.data);
+      return rawData.data.map((batch) => ScanBatchInfoResponseSchema.parse(batch));
+    } catch (error) {
+      console.error("Error fetching scan batch by ID:", error);
       throw error;
     }
   },
@@ -211,6 +243,38 @@ export const scanResultService = {
       });
     } catch (error) {
       console.error("Error fetching vulnerabilities:", error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Get scan batch by ID
+   */
+  async getScanMatchResultByScanBatchId(
+    id: string,
+  ): Promise<ScanMatchResultResponseType> {
+    try {
+      const session = await auth();
+      const response = await fetch(`${apiUrl}/scan-results/match/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.accessToken && { Authorization: `Bearer ${session.accessToken}` }),
+        },
+      });
+
+      if (!response.ok) {
+        const error = (await response.json()) as { message?: string };
+        throw new TRPCError({
+          code: response.status === 404 ? "NOT_FOUND" : "INTERNAL_SERVER_ERROR",
+          message: error.message ?? "Failed to fetch scan result",
+        });
+      }
+      const rawData = await response.json() as { data: ScanMatchResultResponseType };
+      console.log("Fetched scan result data:", rawData.data);
+      return ScanMatchResultResponseSchema.parse(rawData.data);
+    } catch (error) {
+      console.error("Error fetching scan result by ID:", error);
       throw error;
     }
   },

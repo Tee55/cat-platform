@@ -1,8 +1,33 @@
-import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Server, Network, Shield, HardDrive } from 'lucide-react';
-import type { AssetType, PluginType, ServiceType } from '@/shared/types';
-import type { ScanVulnerabilityResponseType } from '@/shared/types';
+"use client";
+
+import React from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import { Server, Shield, Network, HardDrive } from "lucide-react";
+
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+import type { AssetType, PluginType, ServiceType } from "@/shared/types";
+import type { ScanVulnerabilityResponseType } from "@/shared/types";
 
 interface SummaryStatsProps {
   vulnerabilityPorts: string[];
@@ -24,20 +49,18 @@ const SummaryStats: React.FC<SummaryStatsProps> = ({
   // Process port data from vulnerabilities for chart
   const getPortData = () => {
     const portCounts: { [key: string]: number } = {};
-    
-    vulnerabilities.forEach(vuln => {
+    vulnerabilities.forEach((vuln) => {
       if (vuln.port) {
         const port = vuln.port.toString();
         portCounts[port] = (portCounts[port] || 0) + 1;
       }
     });
-
     return Object.entries(portCounts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([port, count]) => ({
         port,
-        incidents: count
+        incidents: count,
       }));
   };
 
@@ -45,21 +68,33 @@ const SummaryStats: React.FC<SummaryStatsProps> = ({
   const getOsData = () => {
     return osVersion.slice(0, 5).map((os, index) => ({
       name: os || `OS ${index + 1}`,
-      value: Math.floor(Math.random() * 50) + 10
+      value: Math.floor(Math.random() * 50) + 10,
     }));
   };
 
   // Process service data for additional stats
   const getServiceStats = () => {
     const serviceCounts: { [key: string]: number } = {};
-    
-    vulnerabilities.forEach(vuln => {
+    vulnerabilities.forEach((vuln) => {
       if (vuln.service) {
         serviceCounts[vuln.service] = (serviceCounts[vuln.service] || 0) + 1;
       }
     });
-
     return serviceCounts;
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="rounded bg-gray-900 p-2 text-sm text-white shadow-lg">
+          <p>{label}</p>
+          <p>
+            {payload[0].name}: {payload[0].value}
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
 
   const portData = getPortData();
@@ -67,62 +102,82 @@ const SummaryStats: React.FC<SummaryStatsProps> = ({
   const serviceStats = getServiceStats();
 
   // Colors for pie chart
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
-
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
   return (
     <div className="mt-8 space-y-6">
-      {/* Summary Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <Network className="w-8 h-8 text-blue-600 mr-3" />
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <Network className="h-8 w-8 text-blue-600" />
             <div>
-              <p className="text-sm font-medium text-gray-500">Total Vulnerabilities</p>
-              <p className="text-2xl font-bold text-gray-900">{vulnerabilities.length}</p>
+              <p className="text-muted-foreground text-sm font-medium">
+                Total Vulnerabilities
+              </p>
+              <p className="text-foreground text-2xl font-bold">
+                {vulnerabilities.length}
+              </p>
             </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <Shield className="w-8 h-8 text-green-600 mr-3" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <Shield className="h-8 w-8 text-green-600" />
             <div>
-              <p className="text-sm font-medium text-gray-500">Plugin Types</p>
-              <p className="text-2xl font-bold text-gray-900">{pluginTypes.length}</p>
+              <p className="text-muted-foreground text-sm font-medium">
+                Plugin Types
+              </p>
+              <p className="text-foreground text-2xl font-bold">
+                {pluginTypes.length}
+              </p>
             </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <Server className="w-8 h-8 text-purple-600 mr-3" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <Server className="h-8 w-8 text-purple-600" />
             <div>
-              <p className="text-sm font-medium text-gray-500">Services</p>
-              <p className="text-2xl font-bold text-gray-900">{serviceNames.length}</p>
+              <p className="text-muted-foreground text-sm font-medium">
+                Services
+              </p>
+              <p className="text-foreground text-2xl font-bold">
+                {serviceNames.length}
+              </p>
             </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center">
-            <HardDrive className="w-8 h-8 text-orange-600 mr-3" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <HardDrive className="h-8 w-8 text-orange-600" />
             <div>
-              <p className="text-sm font-medium text-gray-500">Assets</p>
-              <p className="text-2xl font-bold text-gray-900">{assets.length}</p>
+              <p className="text-muted-foreground text-sm font-medium">
+                Assets
+              </p>
+              <p className="text-foreground text-2xl font-bold">
+                {assets.length}
+              </p>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
+      <Separator />
+
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Port Incidents Chart */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Vulnerable Ports</h3>
-          <div className="h-64">
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Vulnerable Ports</CardTitle>
+          </CardHeader>
+          <CardContent className="h-64 p-6">
             {portData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={portData}>
+                  <Tooltip content={<CustomTooltip />} />
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="port" />
                   <YAxis />
@@ -131,17 +186,19 @@ const SummaryStats: React.FC<SummaryStatsProps> = ({
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
+              <div className="text-muted-foreground flex h-full items-center justify-center">
                 No port data available
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* OS Distribution Chart */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">OS Distribution</h3>
-          <div className="h-64">
+        <Card>
+          <CardHeader>
+            <CardTitle>OS Distribution</CardTitle>
+          </CardHeader>
+          <CardContent className="h-64 p-6">
             {osData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -150,71 +207,95 @@ const SummaryStats: React.FC<SummaryStatsProps> = ({
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent || 0).toFixed(1)}%`}
+                    label={({ name, percent }) =>
+                      `${name} ${(percent || 0).toFixed(1)}%`
+                    }
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
                   >
                     {osData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
                     ))}
                   </Pie>
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
+              <div className="text-muted-foreground flex h-full items-center justify-center">
                 No OS data available
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
+      <Separator />
+
       {/* Plugin Types Summary */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Plugin Types Summary</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {pluginTypes.slice(0, 6).map((plugin, index) => (
-            <div key={plugin.id || index} className="border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">{plugin.name}</p>
-                  <p className="text-sm text-gray-500">ID: {plugin.id}</p>
-                </div>
-                <Shield className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          ))}
-          {pluginTypes.length === 0 && (
-            <div className="col-span-full text-center text-gray-500 py-4">
-              No plugin types available
-            </div>
-          )}
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Plugin Types Summary</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {pluginTypes.length === 0 ? (
+              <p className="text-muted-foreground col-span-full py-4 text-center">
+                No plugin types available
+              </p>
+            ) : (
+              pluginTypes.slice(0, 6).map((plugin) => (
+                <Card key={plugin.id} className="border">
+                  <CardContent className="flex items-center justify-between p-6">
+                    <div>
+                      <p className="text-foreground font-medium">
+                        {plugin.name}
+                      </p>
+                      <p className="text-muted-foreground text-sm">
+                        ID: {plugin.id}
+                      </p>
+                    </div>
+                    <div className="flex h-6 w-6 items-center justify-center">
+                      <Shield className="text-blue-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Service Summary */}
       {Object.keys(serviceStats).length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Vulnerable Services</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Object.entries(serviceStats)
-              .sort((a, b) => b[1] - a[1])
-              .slice(0, 6)
-              .map(([service, count], index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-gray-900">{service}</p>
-                      <p className="text-sm text-gray-500">{count} vulnerabilities</p>
-                    </div>
-                    <Server className="w-6 h-6 text-purple-600" />
-                  </div>
-                </div>
-              ))}
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Vulnerable Services</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {Object.entries(serviceStats)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 6)
+                .map(([service, count], idx) => (
+                  <Card key={idx} className="border">
+                    <CardContent className="flex items-center justify-between p-6">
+                      <div>
+                        <p className="text-foreground font-medium">{service}</p>
+                        <p className="text-muted-foreground text-sm">
+                          {count} vulnerabilities
+                        </p>
+                      </div>
+                      <Server className="h-6 w-6 text-purple-600" />
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

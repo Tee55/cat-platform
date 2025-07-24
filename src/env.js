@@ -14,6 +14,7 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
+    NEST_API_URL: z.string().url().default("http://localhost:3001"),
   },
 
   /**
@@ -23,7 +24,6 @@ export const env = createEnv({
    */
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
-    NEST_API_URL: z.string().url().default("http://localhost:3001"),
   },
 
   /**

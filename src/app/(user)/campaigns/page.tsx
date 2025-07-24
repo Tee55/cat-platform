@@ -28,6 +28,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { LoadingScreen } from "@/components/Loading";
 
 // Extended type for news with source type
 type NewsWithSource = NewsSchemaType & {
@@ -184,7 +185,7 @@ const NewsPage = () => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="mb-3 text-4xl font-bold tracking-tight">
-          News & Intelligence Feed
+          Campaigns
         </h1>
         <p className="text-muted-foreground text-xl">
           Latest security news and threat intelligence from multiple sources
@@ -246,11 +247,7 @@ const NewsPage = () => {
 
       {/* Loading State */}
       {isLoading && (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <NewsCardSkeleton key={i} />
-          ))}
-        </div>
+        <LoadingScreen />
       )}
 
       {/* News Grid */}

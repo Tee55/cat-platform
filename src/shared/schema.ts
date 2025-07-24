@@ -86,6 +86,17 @@ export const ScanStatisticsResponseSchema = z.object({
   infoCount: z.number(),
 });
 
+export const ScanBatchInfoResponseSchema = z.object({
+  scanBatchId: z.string(),
+  timestamp: z.string().transform((str) => new Date(str)),
+  fileName: z.string().optional(),
+  fileCount: z.number().optional(),
+  totalItems: z.number().optional(),
+  createdAt: z.string().transform((str) => new Date(str)).optional(),
+  updatedAt: z.string().transform((str) => new Date(str)).optional(),
+  scanStatistics: ScanStatisticsResponseSchema,
+});
+
 export const QuerySchema = z.object({
   start: z.string().catch("No start provided"),
   end: z.string().catch("No end provided"),
@@ -175,6 +186,18 @@ export const NewsSchema = z.object({
   products: z.array(z.string()).optional(),
   cves: z.array(z.string()).optional(),
   recommendation: z.string().catch("No recommendation provided"),
+});
+
+export const CVEMatchInfoSchema = z.object({
+  cve: VulnerabilitySchema,
+  matchedNews: z.array(NewsSchema),
+  matchedCyfirmaNews: z.array(NewsSchema),
+});
+
+export const ScanMatchResultResponseSchema = z.object({
+  cveMatches: z.array(CVEMatchInfoSchema),
+  totalCVEMatches: z.number(),
+  hasMatches: z.boolean(),
 });
 
 export const LoginResponseSchema = z.object({

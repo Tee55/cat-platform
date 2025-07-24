@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import type { NewsSchema, EndpointSchema, LoginResponseSchema, QuerySchema, ScanBatchResponseSchema, ScanResultResponseSchema, ScanStatisticsResponseSchema, ScanVulnerabilityResponseSchema, VulnerabilitySchema } from "@/shared/schema";
+import type { NewsSchema, EndpointSchema, LoginResponseSchema, QuerySchema, ScanBatchResponseSchema, ScanResultResponseSchema, ScanStatisticsResponseSchema, ScanVulnerabilityResponseSchema, VulnerabilitySchema, ScanMatchResultResponseSchema, CVEMatchInfoSchema, ScanBatchInfoResponseSchema } from "@/shared/schema";
 import type { JSX } from "react";
 
 export type QuerySchemaType = z.infer<typeof QuerySchema>;
@@ -15,6 +15,11 @@ export type ScanStatisticsResponseType = z.infer<
 export type ScanVulnerabilityResponseType = z.infer<
   typeof ScanVulnerabilityResponseSchema
 >;
+export type CVEMatchInfoSchemaType = z.infer<typeof CVEMatchInfoSchema>;
+export type ScanMatchResultResponseType = z.infer<
+  typeof ScanMatchResultResponseSchema
+>;
+export type ScanBatchInfoResponseType = z.infer<typeof ScanBatchInfoResponseSchema>;
 
 export type PaginationResponse<T = QuerySchemaType | EndpointSchemaType | VulnerabilitySchemaType | NewsSchemaType> = {
   data: T[];

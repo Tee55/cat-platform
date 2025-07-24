@@ -1,5 +1,36 @@
-import React from 'react';
-import { Server, Globe, Shield, Database } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Search, Filter, Server, Globe, Shield, Database } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
 import type { AssetType, ServiceType } from '@/shared/types';
 
 interface ServicesTableProps {
@@ -15,108 +46,250 @@ const ServicesTable: React.FC<ServicesTableProps> = ({
   selectedAssetName,
   setSelectedAssetName
 }) => {
-  const getServiceIcon = (serviceName: string) => {
-    const service = serviceName?.toLowerCase();
-    if (service?.includes('http') || service?.includes('web')) {
-      return <Globe className="w-4 h-4 text-blue-600" />;
-    } else if (service?.includes('ssh') || service?.includes('secure')) {
-      return <Shield className="w-4 h-4 text-green-600" />;
-    } else if (service?.includes('database') || service?.includes('sql')) {
-      return <Database className="w-4 h-4 text-purple-600" />;
-    }
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [assetFilter, setAssetFilter] = useState('all');
+
+  const getServiceIcon = (name: string) => {
+    const n = name.toLowerCase();
+    if (n.includes('http') || n.includes('web')) return <Globe className="w-4 h-4 text-blue-600" />;
+    if (n.includes('ssh') || n.includes('secure')) return <Shield className="w-4 h-4 text-green-600" />;
+    if (n.includes('sql') || n.includes('database')) return <Database className="w-4 h-4 text-purple-600" />;
     return <Server className="w-4 h-4 text-gray-600" />;
   };
 
-  const getStatusBadge = (status: string) => {
-    const baseClasses = "px-2 py-1 rounded-full text-xs font-medium";
-    switch (status?.toLowerCase()) {
+  const getStatusVariant = (status: string): "default" | "destructive" | "secondary" | "outline" => {
+    switch (status.toLowerCase()) {
       case 'running':
       case 'active':
-        return `${baseClasses} bg-green-100 text-green-800`;
+        return 'default';
       case 'stopped':
       case 'inactive':
-        return `${baseClasses} bg-red-100 text-red-800`;
+        return 'destructive';
       case 'warning':
-        return `${baseClasses} bg-yellow-100 text-yellow-800`;
+        return 'secondary';
       default:
-        return `${baseClasses} bg-gray-100 text-gray-800`;
+        return 'outline';
     }
   };
 
-  const filteredServices = selectedAssetName === 'All' 
-    ? serviceNames 
-    : serviceNames.filter(service => service.name === selectedAssetName);
+  const getAllServices = () => {
+    return serviceNames.map(service => ({
+      name: service.name,
+      protocol: service.protocol || 'TCP',
+      status: 'Running',
+      assetName: service.name || 'Unknown'
+    }));
+  };
+
+  const allServices = getAllServices();
+
+  const filteredServices = selectedAssetName === 'All'
+    ? allServices
+    : allServices.filter(s => s.assetName === selectedAssetName);
+
+  const dialogFilteredServices = useMemo(() => {
+    let result = getAllServices();
+
+    if (assetFilter !== 'all') {
+      result = result.filter(s => s.assetName === assetFilter);
+    }
+
+    if (statusFilter !== 'all') {
+      result = result.filter(s => s.status.toLowerCase() === statusFilter.toLowerCase());
+    }
+
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      result = result.filter(s =>
+        s.name.toLowerCase().includes(lower) ||
+        s.assetName.toLowerCase().includes(lower) ||
+        s.protocol.toLowerCase().includes(lower)
+      );
+    }
+
+    return result;
+  }, [searchTerm, assetFilter, statusFilter]);
+
+  const resetFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setAssetFilter('all');
+  };
+
+  const uniqueStatuses = [...new Set(allServices.map(s => s.status))];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-900">Services Information</h2>
-        <select
-          value={selectedAssetName}
-          onChange={(e) => setSelectedAssetName(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="All">All Assets</option>
-          {assets.map((asset, index) => (
-            <option key={index} value={asset.name}>
-              {asset.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Service Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Protocol
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredServices.slice(0, 8).map((service, index) => (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center space-x-2">
-                    {getServiceIcon(service.name)}
-                    <span className="text-sm font-medium text-gray-900">
-                      {service.name}
-                    </span>
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <CardTitle>Services Information</CardTitle>
+          <div className="flex items-center gap-3">
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>Show All Services</Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-6xl max-h-[90vh] flex flex-col">
+                <DialogHeader>
+                  <DialogTitle>All Services</DialogTitle>
+                </DialogHeader>
+
+                {/* Filters */}
+                <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input
+                        placeholder="Search service name, protocol, asset..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-4 h-4 text-muted-foreground" />
+                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Status</SelectItem>
+                          {uniqueStatuses.map((s, i) => (
+                            <SelectItem key={i} value={s.toLowerCase()}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Select value={assetFilter} onValueChange={setAssetFilter}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="All Assets" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Assets</SelectItem>
+                        {assets.map((a, i) => (
+                          <SelectItem key={i} value={a.name}>{a.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Button variant="outline" onClick={resetFilters}>
+                      Reset
+                    </Button>
                   </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {service.protocol || 'TCP'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={getStatusBadge('running')}>
-                    Running
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        
-        {filteredServices.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No services found for the selected asset.
+
+                  <div className="text-sm text-muted-foreground">
+                    Showing {dialogFilteredServices.length} services
+                    {searchTerm && ` for "${searchTerm}"`}
+                  </div>
+                </div>
+
+                {/* Services Table */}
+                <div className="flex-1 overflow-auto border rounded-md">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-background z-10">
+                      <TableRow>
+                        <TableHead>Service</TableHead>
+                        <TableHead>Protocol</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Asset</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {dialogFilteredServices.map((service, i) => (
+                        <TableRow key={`${service.name}-${i}`}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {getServiceIcon(service.name)}
+                              <span className="font-medium">{service.name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{service.protocol}</TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusVariant(service.status)}>
+                              {service.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-medium">{service.assetName}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+                  {dialogFilteredServices.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No services found matching your criteria.
+                    </div>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Select value={selectedAssetName} onValueChange={setSelectedAssetName}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Assets</SelectItem>
+                {assets.map((a, i) => (
+                  <SelectItem key={i} value={a.name}>
+                    {a.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        )}
-        
-        {filteredServices.length > 8 && (
-          <div className="text-center py-4 text-sm text-gray-500">
-            Showing 8 of {filteredServices.length} services
-          </div>
-        )}
-      </div>
-    </div>
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        <div className="border rounded-md">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Service</TableHead>
+                <TableHead>Protocol</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Asset</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredServices.slice(0, 8).map((service, i) => (
+                <TableRow key={`${service.name}-${i}`}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {getServiceIcon(service.name)}
+                      <span className="font-medium">{service.name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{service.protocol}</TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusVariant(service.status)}>
+                      {service.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-medium">{service.assetName}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          {filteredServices.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              No services found for the selected asset.
+            </div>
+          )}
+
+          {filteredServices.length > 8 && (
+            <div className="text-center py-4 text-sm text-muted-foreground border-t">
+              Showing 8 of {filteredServices.length} services
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
