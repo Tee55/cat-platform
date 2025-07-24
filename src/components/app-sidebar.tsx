@@ -6,9 +6,12 @@ import {
   IconInnerShadowTop,
   IconNews,
   IconSearch,
+  IconUpload,
 } from "@tabler/icons-react";
+import { ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Flex } from "@radix-ui/themes";
 
-import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
@@ -28,10 +31,109 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useRouter } from "next/navigation";
-import { Flex } from "@radix-ui/themes";
-import { ChevronRight } from "lucide-react";
 
+// NavMain Component
+interface NavItem {
+  title: string;
+  url?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  onClick?: () => void;
+  isActive?: boolean;
+  items?: NavItem[];
+}
+
+interface NavMainProps {
+  items: NavItem[];
+  label?: string;
+}
+
+function NavMain({ items, label }: NavMainProps) {
+  return (
+    <>
+      {items.map((item) => {
+        // If item has sub-items, render as collapsible group
+        if (item.items && item.items.length > 0) {
+          return (
+            <Collapsible
+              key={item.title}
+              defaultOpen
+              className="group/collapsible"
+            >
+              <SidebarGroup>
+                <SidebarGroupLabel asChild>
+                  <CollapsibleTrigger className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm w-full flex items-center px-3 py-2 rounded-md cursor-pointer">
+                    {item.icon && <item.icon className="size-4 mr-2" />}
+                    {item.title}
+                    <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                  </CollapsibleTrigger>
+                </SidebarGroupLabel>
+                <CollapsibleContent>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {item.items.map((subItem) => (
+                        <SidebarMenuItem key={subItem.title}>
+                          <SidebarMenuButton 
+                            asChild={!!subItem.url}
+                            onClick={subItem.onClick}
+                            isActive={subItem.isActive}
+                          >
+                            {subItem.url ? (
+                              <a href={subItem.url} className="flex items-center gap-2">
+                                {subItem.icon && <subItem.icon className="size-4" />}
+                                <span>{subItem.title}</span>
+                              </a>
+                            ) : (
+                              <div className="flex items-center gap-2 cursor-pointer">
+                                {subItem.icon && <subItem.icon className="size-4" />}
+                                <span>{subItem.title}</span>
+                              </div>
+                            )}
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </SidebarGroup>
+            </Collapsible>
+          );
+        }
+
+        // Regular navigation item
+        return (
+          <SidebarGroup key={item.title}>
+            {label && <SidebarGroupLabel>{label}</SidebarGroupLabel>}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    asChild={!!item.url}
+                    onClick={item.onClick}
+                    isActive={item.isActive}
+                  >
+                    {item.url ? (
+                      <a href={item.url} className="flex items-center gap-2">
+                        {item.icon && <item.icon className="size-4" />}
+                        <span>{item.title}</span>
+                      </a>
+                    ) : (
+                      <div className="flex items-center gap-2 cursor-pointer">
+                        {item.icon && <item.icon className="size-4" />}
+                        <span>{item.title}</span>
+                      </div>
+                    )}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        );
+      })}
+    </>
+  );
+}
+
+// AppSidebar Component
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
 
@@ -47,10 +149,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         onClick: () => router.push("/vulnerability-dashboard"),
         icon: IconDashboard,
       },
-    ],
-    navGroups: [
       {
         title: "Threat Intelligence",
+        icon: IconSearch,
         items: [
           {
             title: "CVE Search",
@@ -63,6 +164,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             icon: IconNews,
           },
         ],
+      },
+      {
+        title: "Upload File",
+        onClick: () => router.push("/upload-file"),
+        icon: IconUpload,
       },
     ],
   };
@@ -88,40 +194,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarContent>
         <NavMain items={data.navMain} />
-
-        {/* Collapsible Groups */}
-        {data.navGroups.map((group) => (
-          <Collapsible
-            key={group.title}
-            defaultOpen
-            className="group/collapsible"
-          >
-            <SidebarGroup>
-              <SidebarGroupLabel asChild>
-                <CollapsibleTrigger className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm w-full flex items-center px-3 py-2 rounded-md cursor-pointer">
-                  {group.title}
-                  <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                </CollapsibleTrigger>
-              </SidebarGroupLabel>
-              <CollapsibleContent>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {group.items.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild>
-                          <a href={item.url} className="flex items-center gap-2">
-                            <item.icon className="size-4" />
-                            <span>{item.title}</span>
-                          </a>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </CollapsibleContent>
-            </SidebarGroup>
-          </Collapsible>
-        ))}
       </SidebarContent>
 
       <SidebarFooter>

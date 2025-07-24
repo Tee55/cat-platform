@@ -52,6 +52,7 @@ export const scanResultService = {
         formData.append("files", file);
       });
 
+      // console.log("data:", apiUrl);
       const session = await auth();
       const response = await fetch(`${apiUrl}/scan-results/upload/multiple`, {
         method: "POST",
